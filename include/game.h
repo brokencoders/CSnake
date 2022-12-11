@@ -25,7 +25,7 @@ private:
 
     // SDL
     SDL_Window* window;
-	SDL_Surface* screenSurface;
+    SDL_Surface* screenSurface;
 };
 
 #endif
