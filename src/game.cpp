@@ -8,17 +8,6 @@ Game::Game()
 :window(nullptr), screenSurface(nullptr), running(true),
     points(0), speed(150)
 { 
-
-}
-
-Game::~Game() 
-{ 
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-}
-
-void Game::start() 
-{ 
     // Init SDL and check for errors
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
@@ -44,7 +33,16 @@ void Game::start()
 
     // Get window surface
     screenSurface = SDL_GetWindowSurface(window);
+}
 
+Game::~Game() 
+{ 
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+}
+
+void Game::start() 
+{
     running = true;
     loop();
 }
