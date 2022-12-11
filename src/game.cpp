@@ -14,7 +14,7 @@ Game::Game()
 Game::~Game() 
 { 
     SDL_DestroyWindow(window);
-	SDL_Quit();
+    SDL_Quit();
 }
 
 void Game::start() 
@@ -28,21 +28,21 @@ void Game::start()
 
 	// Create the window and check for errors 
 	window = SDL_CreateWindow(
-		"Snake",					// Title
+		"Snake",			// Title
 		SDL_WINDOWPOS_CENTERED,		// x
 		SDL_WINDOWPOS_CENTERED,		// y
-		window_size,				// width 
-		window_size,				// height
-		0							// flags
+		window_size,			// width 
+		window_size,			// height
+		0				// flags
 	);
 
-	if (window == NULL )
+    if (window == NULL )
     {
-		std::cout << "Window could't be created! Error: " << SDL_GetError() << "\n";
-		return;
-	}
+	std::cout << "Window could't be created! Error: " << SDL_GetError() << "\n";
+	return;
+    }
 
-	// Get window surface
+    // Get window surface
     screenSurface = SDL_GetWindowSurface(window);
 
     running = true;
