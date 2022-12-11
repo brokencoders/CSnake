@@ -39,6 +39,8 @@ Game::~Game()
 { 
     SDL_DestroyWindow(window);
     SDL_Quit();
+    
+    delete screenSurface;
 }
 
 void Game::start() 
