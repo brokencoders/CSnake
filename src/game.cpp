@@ -48,7 +48,7 @@ Game::Game()
 		error = true;
     }
 
-    font = TTF_OpenFont("../font/Debrosee-ALPnL.ttf", 40);
+    font = TTF_OpenFont("../font/BodoniFLF-Bold.ttf", 40);
     if(font == nullptr) {
         std::cout << "Unable to load font: Error " << TTF_GetError() << "\n";
 		error = true;
