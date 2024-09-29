@@ -1,45 +1,59 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "SDL.h"
-#include "SDL2/SDL_ttf.h"
 #include <iostream>
 
-#include "entities.h"
+#include "SDL.h"
+#include "SDL2/SDL_ttf.h"
 
-class Game 
+#include "apple.h"
+#include "snake.h"
+#include "agent.h"
+
+class Game
 {
 public:
-    Game();             // Create the window and setup the game 
-    ~Game();            // Free memory
+	Game(int window_size, int world_size, bool AI);
+	~Game();
 
-    void start();   
-    void stop();
+	bool init();
+	void initGame();
+	void start();
+	void stop();
+	void loop();
+	void handleEvents();
 
-    void drawMenu();
-    void drawPoints();
-    void drawGameover();
+	void deadMenu();
+	void drawPoints();
+
+	std::vector<int> get_state();
 
 private:
-    void loop();        // Game loop managed internaly
-    void handleEvents();// Close window and user key inputs
+	int world_size;
+	int window_size;
+	
+	bool AI;
+	bool running;
+	bool render;
 
-    bool running;       // Window Status
-    bool game_running;  // Game Status
+	int speed;
+	int points;
+	int best_score;
 
-    // Game info 
-    int points;
-    int speed;
+	Apple apple1;
+	Apple apple2;
+	Apple apple3;
+	Apple apple4;
+	Apple apple5;
+	
+	Snake snake;
 
-    Snake snake;
-    Apple apple;
+	Agent agent;
 
-    // SDL
-    SDL_Window* window;
+	SDL_Window* window;
     SDL_Surface* screenSurface;
     SDL_Renderer* renderer;
 
-    // TFF 
     TTF_Font* font;
 };
 

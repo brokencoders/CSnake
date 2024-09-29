@@ -1,11 +1,9 @@
 #include "game.h"
 
-// Global Variabels
-int world_size  = 31;
-int window_size = 500;
+#include "model.h"
 
 int main()
 {
-    Game game = Game();
-    return 0;
+	Game game = Game(500, 25, true);
+	return 0;
 }
