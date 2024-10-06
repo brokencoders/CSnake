@@ -4,6 +4,6 @@
 
 int main()
 {
-	Game game = Game(500, 25, true);
+	Game game = Game(1000, 15, true);
 	return 0;
 }

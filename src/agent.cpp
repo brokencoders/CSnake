@@ -1,9 +1,6 @@
 #include "agent.h"
 #include <random> 
 
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma warning(disable : 140102074127488)
-
 void printTensorDimensions(const torch::Tensor& tensor) {
     // Get the sizes of the tensor
     auto sizes = tensor.sizes();
@@ -20,14 +17,13 @@ void printTensorDimensions(const torch::Tensor& tensor) {
 }
 
 Agent::Agent(int size)
-	:model(size), model_update(size), buffer_size(10000)
+	:policy(size), target(size), buffer_size(10000)
 {
-	optimizer = std::make_shared<torch::optim::Adam>(model.parameters(), 0.001);
+	optimizer = std::make_shared<torch::optim::Adam>(policy.parameters(), 0.001);
 }
 
 int Agent::get_action(std::vector<int> state)
 {
-	static double epsilon = 1.0;
     static double epsilon_min = 0.01;
     static double epsilon_decay = 0.99999;
     static std::random_device rd;
@@ -35,7 +31,7 @@ int Agent::get_action(std::vector<int> state)
     static std::uniform_real_distribution<> dis(0.0, 1.0);
 	
     torch::Tensor t_state = torch::tensor(state, torch::kFloat32);
-    torch::Tensor result = model_update.forward(t_state);
+    torch::Tensor result = target.forward(t_state);
     double max = result[0].item<double>();
     int index = 0;
     for(int i = 1; i < 3; i++)
@@ -60,7 +56,7 @@ int Agent::get_action(std::vector<int> state)
 
 void Agent::update()
 {
-    model_update = model;
+    target = policy;
 }
 
 void Agent::train(std::vector<int> state, std::vector<int> new_state, int action, int reward)
@@ -81,33 +77,32 @@ void Agent::train(std::vector<int> state, std::vector<int> new_state, int action
     if(buffer.size() > batch_size)
     {
     	t_number++;
-    	std::cout << "TRAIN: " << t_number << std::endl;
+    	//std::cout << "TRAIN: " << t_number << std::endl;
 
         std::vector<Experience> mini_batch;
         std::sample(buffer.begin(), buffer.end(), std::back_inserter(mini_batch), batch_size, std::mt19937{std::random_device{}()});
 
         std::vector<torch::Tensor> states, next_states, rewards, actions;
         for (const auto& exp : mini_batch) {
-            states.push_back(exp.state);
-            next_states.push_back(exp.next_state);
-            rewards.push_back(torch::tensor({exp.reward}));
-            actions.push_back(torch::tensor({exp.action}));
+            states.push_back(exp.state);                    // (25*25)
+            next_states.push_back(exp.next_state);          // (25*25)
+            rewards.push_back(torch::tensor({exp.reward})); // (1)
+            actions.push_back(torch::tensor({exp.action})); // (1)
         }
 
-        torch::Tensor batch_states = torch::stack(states);
-        torch::Tensor batch_next_states = torch::stack(next_states);
-        torch::Tensor batch_rewards = torch::stack(rewards);
-        torch::Tensor batch_actions = torch::stack(actions);
+        torch::Tensor batch_states = torch::stack(states);           // (bs, 25*25)
+        torch::Tensor batch_next_states = torch::stack(next_states); // (bs, 25*25)
+        torch::Tensor batch_rewards = torch::stack(rewards);         // (bs, 1)
+        torch::Tensor batch_actions = torch::stack(actions);         // (bs, 1)
 
         // LOSS 
-        torch::Tensor q_values = model.forward(batch_states);
-        torch::Tensor q_value = q_values.gather(1, batch_actions.view({-1, 1})).squeeze(1);
+        torch::Tensor q_values = policy.forward(batch_states);        // (bs, 3)
+        torch::Tensor q_value = q_values.gather(1, batch_actions);    // (bs, 1)
 
-        torch::Tensor next_q_values = model_update.forward(batch_next_states);
-        torch::Tensor maximum = std::get<1>(next_q_values.max(1));
-        torch::Tensor next_q_value = next_q_values.gather(1, maximum.unsqueeze(1)).squeeze(1);
+        torch::Tensor next_q_values = target.forward(batch_next_states);        // (bs, 3)
+        torch::Tensor next_q_value  = std::get<0>(next_q_values.max(1, true));  // (bs, 1)
 
-        torch::Tensor expected_q_value = batch_rewards + gamma * next_q_value * (batch_rewards != -5.0f);
+        torch::Tensor expected_q_value = batch_rewards + gamma * next_q_value * (batch_rewards < -.5f);
         
         torch::Tensor loss = torch::mse_loss(q_value, expected_q_value);
 

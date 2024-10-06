@@ -3,12 +3,12 @@
 
 Game::Game(int window_size, int world_size, bool AI)
 	:window_size(window_size), world_size(world_size), 
-	AI(AI), render(true), speed(50), points(0), agent(world_size * world_size), best_score(0)
+	AI(AI), render(true), speed(50), points(0), agent(world_size * world_size + 2), best_score(0)
 {
 	if(init()) 
 	{
 		Apple::init(window_size, world_size);
-		snake.init(window_size, world_size);
+		Snake::init(window_size, world_size);
 		start();
 	}
 }
@@ -149,8 +149,9 @@ void Game::loop()
 	std::vector<int> state;
 	std::vector<int> new_state = get_state();
 	int action = 0;
-	int count = 20;
+	int count = 0;
 	int t = 0;
+	int q = 0;
 	while(running)
 	{
 		handleEvents();
@@ -181,11 +182,11 @@ void Game::loop()
             drawPoints();
 		}
 
-		reward = -0.3;
+		reward = 0;
 		if(snake.appleCollision(apple1))
 		{
 			points++;
-			if(AI) reward = 2;
+			if(AI) reward = 100;
 			apple1 = Apple();
 		}
 
@@ -225,18 +226,18 @@ void Game::loop()
 				deadMenu();
 			
 			render = false;
-			if(count == 20)
+			if(count == 200)
 			{
 				render = true;
 				count = 0;
 				t++;
 			}
 			system("clear");
-			std::cout << t << " " << count << " " << points << " " << best_score << std::endl;
+			std::cout << t << " " << count << " " << points << " " << best_score << " " << agent.epsilon << " " << (q += points) << std::endl;
 			count++;
 			
 			initGame();
-			if(AI) reward = -50 / snake.get_size();
+			if(AI) reward = -1;
 			agent.update();
 		}
 
@@ -283,7 +284,7 @@ void Game::handleEvents()
 
 std::vector<int> Game::get_state()
 {
-    std::vector<int> v(world_size * world_size, 0);
+    std::vector<int> v(world_size * world_size + 2, 0);
     v[apple1.x + apple1.y * world_size] = 1;
     /*
     v[apple2.x + apple2.y * world_size] = 1;
@@ -296,9 +297,24 @@ std::vector<int> Game::get_state()
     for (auto s : snake_body) {
         int index = std::get<0>(s) + std::get<1>(s) * world_size;
         if (index < v.size()) {
-            v[index] = 2;
+            v[index] = -1;
         }
     }
+
+	auto [x,y] = snake_body.front();
+	v[x + y*world_size] = -2;
+
+	v[world_size*world_size]   = 0;
+	v[world_size*world_size+1] = 0;
+
+	if (snake.direction == UP)
+		v[world_size*world_size+1] = 1;
+	if (snake.direction == DOWN)
+		v[world_size*world_size+1] = -1;
+	if (snake.direction == RIGHT)
+		v[world_size*world_size]   = 1;
+	if (snake.direction == LEFT)
+		v[world_size*world_size]   = -1;
 
     return v;
 }

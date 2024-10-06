@@ -53,8 +53,7 @@ void Snake::move(Direction d)
 
 void Snake::moveAi(int move)
 {
-    move++;
-    int m = ((int) direction + (move - 2));
+    int m = ((int) direction + (move - 1));
     if(m <= -1) m = 3;
     if(m >= 4) m = 0;
     direction = (Direction) m; 
